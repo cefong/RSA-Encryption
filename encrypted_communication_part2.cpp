@@ -250,9 +250,10 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
 
     if (!isServer()) {
         // if client
+        Serial.println("I am the client");
         // d, n are client keys
         // e, m are server keys
-        StateNames current = WaitForAck;
+        current = WaitForAck;
         while (current == WaitForAck) {
             Serial.println("Waiting for Ack");
             // if you haven't already received 'A'
