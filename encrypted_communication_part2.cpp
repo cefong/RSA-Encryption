@@ -514,7 +514,6 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
 
     if (!isServer()) {
         // if client
-        Serial.println("I am the client");
         // d, n are client keys
         // e, m are server keys
         current = WaitForAck;
@@ -615,9 +614,6 @@ int main() {
         Serial.println("Server");
         // generate keys for server
         serverKeyGeneration(serverPublicKey, serverPrivateKey, serverModulus);
-        Serial.println(serverPublicKey);
-        Serial.println(serverPrivateKey);
-        Serial.println(serverModulus);
         d = serverPrivateKey;
         n = serverModulus;
         // e = clientPublicKey;
@@ -628,9 +624,6 @@ int main() {
         Serial.println("Client");
         // generate keys for client
         clientKeyGeneration(clientPublicKey, clientPrivateKey, clientModulus);
-        Serial.println(clientPublicKey);
-        Serial.println(clientPrivateKey);
-        Serial.println(clientModulus);
         d = clientPrivateKey;
         n = clientModulus;
         // e = serverPublicKey;
@@ -639,14 +632,12 @@ int main() {
         Mod = n;
     }
     // Perform Handshake
-    Serial.println("WTF");
     handshake(Key, Mod, keyArray);
     e = keyArray[0];
     m = keyArray[1];
-    Serial.println(e);
-    Serial.println(m);
     // Now enter the communication phase.
     communication(d, n, e, m);
+    Serial.flush();
     // Should never get this far (communication has an infite loop).
     return 0;
 }
