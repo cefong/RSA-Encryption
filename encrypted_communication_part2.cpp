@@ -608,6 +608,7 @@ int main() {
     setup();
     uint32_t d, n, e, m;
     uint32_t keyArray[2];
+    uint32_t Key, Mod;
 
     // Determine our role and the encryption keys.
     if (isServer()) {
@@ -618,8 +619,8 @@ int main() {
         n = serverModulus;
         // e = clientPublicKey;
         // m = clientModulus;
-        uint32_t Key = serverPublicKey;
-        uint32_t Mod = n;
+        Key = serverPublicKey;
+        Mod = n;
     } else {
         Serial.println("Client");
         // generate keys for client
@@ -628,8 +629,8 @@ int main() {
         n = clientModulus;
         // e = serverPublicKey;
         // m = serverModulus;
-        uint32_t Key = clientPublicKey;
-        uint32_t Mod = n;
+        Key = clientPublicKey;
+        Mod = n;
     }
     // Perform Handshake
     handshake(Key, Mod, keyArray);
