@@ -614,18 +614,12 @@ int main() {
         Serial.println("Server");
         // generate keys for server
         serverKeyGeneration(serverPublicKey, serverPrivateKey, serverModulus);
-        Serial.println(serverPublicKey);
-        Serial.println(serverPrivateKey);
-        Serial.println(serverModulus);
         d = serverPrivateKey;
         n = serverModulus;
         // e = clientPublicKey;
         // m = clientModulus;
-        uint32_t sKey = serverPublicKey;
-        uint32_t sMod = n;
-        handshake(sKey, sMod, keyArray);
-        e = keyArray[0];
-        m = keyArray[1];
+        uint32_t Key = serverPublicKey;
+        uint32_t Mod = n;
     } else {
         Serial.println("Client");
         // generate keys for client
@@ -634,12 +628,13 @@ int main() {
         n = clientModulus;
         // e = serverPublicKey;
         // m = serverModulus;
-        uint32_t cKey = clientPublicKey;
-        uint32_t cMod = n;
-        handshake(cKey, cMod, keyArray);
-        e = keyArray[0];
-        m = keyArray[1];
+        uint32_t Key = clientPublicKey;
+        uint32_t Mod = n;
     }
+    // Perform Handshake
+    handshake(Key, Mod, keyArray);
+    e = keyArray[0];
+    m = keyArray[1];
     // Now enter the communication phase.
     communication(d, n, e, m);
 
