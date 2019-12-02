@@ -487,8 +487,8 @@ int main() {
         n = serverModulus;
         // e = clientPublicKey;
         // m = clientModulus;
-        sKey = serverPublicKey;
-        sMod = serverPublicMod;
+        uint32_t sKey = serverPublicKey;
+        uint32_t sMod = n;
         handshake(sKey, sMod, keyArray);
         e = keyArray[0];
         m = keyArray[1];
@@ -498,8 +498,8 @@ int main() {
         n = clientModulus;
         // e = serverPublicKey;
         // m = serverModulus;
-        cKey = clientPublicKey;
-        cMod = clientPublicMod;
+        uint32_t cKey = clientPublicKey;
+        uint32_t cMod = n;
         handshake(cKey, cMod, keyArray);
         e = keyArray[0];
         m = keyArray[1];
