@@ -1,17 +1,25 @@
 /*
-    Encrypted Arduino Communication Part 1 Solution
+    Encrypted Arduino Communication Part 2
     CMPUT 274 Fall 2019
-    Written by Ian DeHaan
-    Tweaks by Zac Friggstad
+    Celine Fong (1580124)
+    Claire Martin 
 */
-#include <Arduino.h>
-using namespace std;
 
+#include <Arduino.h>
+
+/*
+    Generates a random k-bit number up to 2^32-1
+
+    Arguments:
+        k (unsigned int): The number of bits the random number will use
+
+    Returns:
+        rand (unsigned integer): A random k-bit number 
+*/
 unsigned int randomGenerator(unsigned int k) {
-    // generates a random k-bit number
-    // can only generate random numbers up to (2^32)-1
     unsigned int rand = 0;
     for (unsigned int i = 0; i < k; i++) {
+        // take least significant bit of value read from analogRead
         int LSB = analogRead(A1) & 1;
         // append the LSB that was just read from A1 to the end of the random binary number
         rand = (LSB << i | rand);
@@ -20,6 +28,16 @@ unsigned int randomGenerator(unsigned int k) {
     return rand;
 }
 
+/*
+    Takes the upper square root of n
+    IMPORTANT: This funcion was taken from the primality morning problem presented in class
+
+    Arguments:
+        n (unsigned int): The integer whose upper square root is desired
+
+    Returns:
+        d (unsigned int): The smallest integer such that d*d will be greater than n 
+*/
 unsigned int upper_sqrt(unsigned int n) {
     // returns smallest integer d such that d*d will be greater than n
     unsigned int d = sqrt((double) n);
@@ -30,12 +48,25 @@ unsigned int upper_sqrt(unsigned int n) {
     return d;
 }
 
+/*
+    Determines if a number is prime or not
+    IMPORTANT: Taken from Celine Fong (1580124) solution to primality morning problem presented in class
+
+    Arguments:
+        n (unsigned int): The number that will be tested for primality
+
+    Returns:
+        is_prime (bool): true if n is prime, false if not
+*/
 bool primality(unsigned int n) {
-    // returns true if n is prime, false if not
     unsigned int i = 2;
+    // initially assume the number is prime
     bool is_prime = true;
+    // check all integers between 2 and the square root of n
     while ((i < upper_sqrt(n)) && (is_prime == true)) {
+        // if n is divisible by any of these numbers, it is not prime
         if (n % i == 0) {
+            // break out of loop
             is_prime = false;
         }
         i++;
@@ -43,11 +74,20 @@ bool primality(unsigned int n) {
     return is_prime;    
 }
 
-unsigned int primerange(int k) {
-    // generates a prime number in range 2^k to 2^(k+1)
+/*
+    Generates a random prime number in a given range.
+
+    Arguments:
+        k (unsigned int): Indicates range to generate prime number within. (2^k to 2^(k+1))
+
+    Returns:
+        randNum (unsigned int): Random prime number in range 2^k to 2^(k+1)
+*/
+unsigned int primerange(unsigned int k) {
     // first generate a random k-bit number and add it to 2^k
     unsigned int randNum = randomGenerator(k) + (1 << k);
     while (!primality(randNum)) {
+        // increment random number if it isn't prime
         randNum++;
         // wrap around if number goes over the range
         if (randNum >= (1 << (k+1))) {
@@ -57,20 +97,48 @@ unsigned int primerange(int k) {
     return randNum;
 }
 
+/*
+    Generates the required modulus for RSA encryption
+
+    Arguments:
+        p (uint32_t): Random prime number between 2^14 to 2^15
+        q (uint32_t): Random prime number between 2^15 to 2^16
+
+    Returns:
+        n (uint32_t): modulus for RSA encryption
+*/
 uint32_t modulus(uint32_t p, uint32_t q) {
-    // generates the modulus given prime numbers p and q
     uint32_t n = p*q;
     return n;
 }
 
+/*
+    Calculates totient(phi)
+
+    Arguments:
+        p (uint32_t): Random prime number between 2^14 to 2^15
+        q (uint32_t): Random prime number between 2^15 to 2^16
+
+    Returns:
+        tot (uint32_t): totient of p and q
+*/
 uint32_t totient(uint32_t p, uint32_t q) {
-    // calculates the totient(phi) given prime number p and q
     uint32_t tot = (p-1)*(q-1);
     return tot;
 }
 
+/*
+    Determine the greatest common divior of two integers.
+    IMPORTANT: This function was taken from GCD program posted to eclass.
+
+    Arguments:
+        a (uint32_t): Integer used in conjunction with b to calculate greatest common divisor
+        b (uint32_t): Integer used in conjunction with a to calculate greatest common divisor
+
+    Returns:
+        a (uint32_t): Greatest common divisor of a and b
+*/
 uint32_t gcd_euclid_fast(uint32_t a, uint32_t b) {
-    // returns the greatest common divisor of a and b
     while (b > 0) {
     a %= b;
 
@@ -82,20 +150,46 @@ uint32_t gcd_euclid_fast(uint32_t a, uint32_t b) {
     return a; // b is 0
 }
 
+/*
+    Generates the public key for RSA encryption
+
+    Arguments:
+        tot (uint32_t): the totient of two randomly generated prime numbers
+
+    Returns:
+        pubKey (uint32_t): the public key
+*/
 uint32_t publickey(uint32_t tot) {
-    // returns the public key given the totient
+    // first, generate a random 15-bit number
     uint32_t pubKey = randomGenerator(15);
+    // ensure that the public key satisfies the condition gcd(pubKey, tot) == 1
     while (gcd_euclid_fast(pubKey, tot) != 1) {
+        // if it doesn't satisfy the condition, keep incrementing until find a number that does
         pubKey++;
+        // ensures that the key never exceeds 15 bits
         if (pubKey >= (1<<15)) {
-            pubKey = (pubKey % (1<<15)) + (1<<14);
+            pubKey = 1 + (pubKey % (1<<15));
+        } 
+        // ensures the key never exceeds totient
+        else if (pubKey >= tot) {
+            pubKey = 1 + pubKey % tot;
         }
     }
     return pubKey;
 }
 
+/*
+    Finds the modular inverse of the public key (e).
+    IMPORTANT: Adapted from template code given in the Extended Euclidean Algorithm worksheet on eclass
+
+    Arguments:
+        e (uint32_t): The public key of the given Arduino
+        phi (uint32_t): The totient of two randomly generated prime numbers
+
+    Returns:
+        mod_inv (int32_t): The modular inverse of given public key
+*/
 int32_t ext_euclid(uint32_t e, uint32_t phi) {
-    // returns the modular inverse of the public key, e
     uint32_t r[40];
     int32_t s[40];
     r[0] = e; r[1] = phi;
@@ -107,43 +201,74 @@ int32_t ext_euclid(uint32_t e, uint32_t phi) {
         s[i+1] = s[i-1] - q*s[i];
         i++;
     }
-    return s[i-1];
+    int32_t mod_inv = s[i-1];
+    return mod_inv;
 }
 
+/*
+    Determines the modular equivalent of an integer with a given modulus
+
+    Arguments:
+        x (int32_t): Integer the modular equivalent is desired from
+        m (uint32_t): Modulus the integer will be reduced with
+
+    Returns:
+        mod (int32_t): The reduced integer
+*/
 int32_t reduce_mod(int32_t x, uint32_t m) {
-    // returns the private key given the modulus and the modular inverse of e
+    // if the integer is positive or zero, simply return the x mod m
     if (x>=0) {
-        return (x%m);
-    } else if (x < 0) {
+        int32_t mod = (x%m);
+        return mod;
+    } 
+    // if the integer is negative, find the modular equivalent and return that positive integer
+    else if (x < 0) {
         uint32_t z = (-x/m) + 1;
-        return ((x+z*m) % m);
+        int32_t mod = ((x+z*m) % m);
+        return mod;
     }
 }
 
-
-// Constants from the assn. spec
-// Primes: 307, 311
+// declare global variables for server/client keys and moduli
 uint32_t serverPublicKey;
 uint32_t serverPrivateKey;
 uint32_t serverModulus;
 
-// Generator: 271, 313
 uint32_t clientPublicKey;
 uint32_t clientPrivateKey;
 uint32_t clientModulus;
 
+/*
+    Determines the modular equivalent of an integer with a given modulus
+
+    Arguments:
+        serverPublicKey (uint32_t&): Pass-by reference to server's public key
+        serverPrivateKey (uint32_t&): Pass-by reference to server's private key
+        serverModulus (uint32_t&): Pass-by reference to client's modulus
+
+    Returns:
+        Nothing, simply updates pass-by values
+*/
 void serverKeyGeneration(uint32_t& serverPublicKey, uint32_t& serverPrivateKey, uint32_t& serverModulus) {
+    // generate random prime number between 2^14 and 2^15
     unsigned int smallprime = primerange(14);
+    // generate random prime number between 2^15 and 2^16
     unsigned int biggerprime = primerange(15);
+    // calculate totient of the two primes
     uint32_t toti = totient(smallprime,biggerprime);
+    // generates the server's public key
     serverPublicKey = publickey(toti);
+    // generates server modulus given the two primes
     serverModulus = modulus(smallprime, biggerprime);
+    // generates the modular inverse of the serverPublicKey
     int32_t euci = ext_euclid(serverPublicKey, toti);
+    // generates the server's private key by adjusting euci to ensure a positive integer
     serverPrivateKey = reduce_mod(euci, serverModulus);
     Serial.println("generated keys for server");
 }
 
-int32_t clientKeyGeneration(uint32_t& clientPublicKey, uint32_t& clientPrivateKey, uint32_t& clientModulus) {
+// same as above, but for the client
+void clientKeyGeneration(uint32_t& clientPublicKey, uint32_t& clientPrivateKey, uint32_t& clientModulus) {
     unsigned int smallprime = primerange(14);
     unsigned int biggerprime = primerange(15);
     uint32_t toti = totient(smallprime,biggerprime);
@@ -171,6 +296,7 @@ bool isServer() {
     }
 }
 
+// All code below until otherwise indicated was taken from the Major Assignment 2 Part 1 Solution posted to eclass
 /*
     Compute and return (a*b)%m
     Note: m must be less than 2^31
@@ -299,6 +425,7 @@ char decrypt(uint32_t x, uint32_t d, uint32_t n) {
     return (char) powMod(x, d, n);
 }
 
+// end of Major Assignemnt 2 Part 1 Solution provided on eclass 
 
 void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
     // d, n are the keys to be sent
@@ -487,6 +614,9 @@ int main() {
         Serial.println("Server");
         // generate keys for server
         serverKeyGeneration(serverPublicKey, serverPrivateKey, serverModulus);
+        Serial.println(serverPublicKey);
+        Serial.println(serverPrivateKey);
+        Serial.println(serverModulus);
         d = serverPrivateKey;
         n = serverModulus;
         // e = clientPublicKey;
@@ -514,6 +644,5 @@ int main() {
     communication(d, n, e, m);
 
     // Should never get this far (communication has an infite loop).
-
     return 0;
 }

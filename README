@@ -1,0 +1,21 @@
+CMPUT 274 Encrypted Arduino Communication Part 2
+Celine Fong (1580124)
+Claire Martin ()
+
+Description: 
+Chat program using RSA encyption to secure data transmission between two Arduinos over Serial protocol. Full implementation which utilizes random key/modulus generation and handshaking to establish connection between Arduinos.
+
+Included files:
+	- encrypted_communication_part2.cpp
+	- Makefile
+
+Wiring Instructions:
+Two Arduinos were used (for the sake of simplicity, call them Arduino 1 and Arduino 2)
+GND(Arduino 1) -> GND(Arduino 2)
+TX3(Arduino 1) -> RX3(Arduino 2)
+TX3(Arduino 2) -> RX3(Arduino 1)
+DIGITAL PIN13(Arduino 1) -> 550 ohm resistor -> 5V(Arduino 1)
+DIGITAL PIN13(Arduino 2) -> GND(Arduino 2)
+
+Notes:
+The following functions: upper_sqrt, primality, gcd_euclid_fast, ext_euclid, multMod, powMod, wait_on_serial3, uint32_to_serial3, uint32_from_serial3, encrypt, decrypt were either adapted from code posted on eClass, or taken from previous assignment submissions. 
