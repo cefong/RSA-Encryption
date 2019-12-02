@@ -440,74 +440,76 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         // d, n are server keys
         // e, m are client keys
         current = Listen;
-        // if we have reached Data Exchane stage, stop handshake
-        while (current == Listen) {
-            // wait to receive connection request 'C' on Serial3
-            // reset firstTime variable so that the Server will send its keys
-            Serial.println("Listening");
-            firstTime = true;
-            if (wait_on_serial3(1, 1000)) {
-                // keeps waiting to read 'C'
-                char readC = Serial3.read();
-                if (readC == 'C') {
-                    // if the character read was 'C', continue to next state
-                    // otherwise, will keep listening
-                    current = WaitForKey;
+        while (current != DataExchange) {
+            // if we have reached Data Exchane stage, stop handshake
+            while (current == Listen) {
+                // wait to receive connection request 'C' on Serial3
+                // reset firstTime variable so that the Server will send its keys
+                Serial.println("Listening");
+                firstTime = true;
+                if (wait_on_serial3(1, 1000)) {
+                    // keeps waiting to read 'C'
+                    char readC = Serial3.read();
+                    if (readC == 'C') {
+                        // if the character read was 'C', continue to next state
+                        // otherwise, will keep listening
+                        current = WaitForKey;
+                    }
                 }
             }
-        }
-        while (current == WaitForKey) {
-            // once C received, read client public key (exp and mod)
-            // wait for 1s to read the 8 bytes of the keys
-            Serial.println("Waiting for Key");
-            if (wait_on_serial3(8, 1000)) {
-                // if it could read 8 bytes within 1s
-                // first read e, 4 bytes
-                e = uint32_from_serial3();
-                // next read m, 4 bytes
-                m = uint32_from_serial3();
-                Serial.println("Received keys");
-                if (firstTime) {
-                    // if this is the first time you've hit WaitForKey state
-                    // prevents the arduino from sending its keys twice
-                    // send 'A', then send server public keys
-                    Serial.println("Sending keys");
-                    Serial3.write('A');
-                    uint32_to_serial3(d);
-                    uint32_to_serial3(n);
-                }
-                // move to next state
-                current = WaitForAck;
-            } else {
-                // this will only happen if it couldn't read 8 bytes or took too long
-                // go back to listening state and start again waiting for C
-                current = Listen;
-            }
-        }
-        while (current == WaitForAck) {
-            // wait for 'A' from client on Serial3
-            Serial.println("Waiting for Ack");
-            if (wait_on_serial3(1, 1000)) {
-                // if it could read a character within 1s
-                char readA = Serial3.read();
-                if (readA == 'A') {
-                    // if character was 'A', move to data exchange
-                    Serial.println("Received- Data Exchange Ready");
-                    current = DataExchange;
-                } else if (readA == 'C') {
-                    // if receives 'C' instead of 'A', read client keys but do not send server keys
-                    // if character was 'C', move back to waiting for key state
-                    // firstTime is reset to false so Server will not send its keys again
-                    firstTime = false;
-                    current = WaitForKey;
+            while (current == WaitForKey) {
+                // once C received, read client public key (exp and mod)
+                // wait for 1s to read the 8 bytes of the keys
+                Serial.println("Waiting for Key");
+                if (wait_on_serial3(8, 1000)) {
+                    // if it could read 8 bytes within 1s
+                    // first read e, 4 bytes
+                    e = uint32_from_serial3();
+                    // next read m, 4 bytes
+                    m = uint32_from_serial3();
+                    Serial.println("Received keys");
+                    if (firstTime) {
+                        // if this is the first time you've hit WaitForKey state
+                        // prevents the arduino from sending its keys twice
+                        // send 'A', then send server public keys
+                        Serial.println("Sending keys");
+                        Serial3.write('A');
+                        uint32_to_serial3(d);
+                        uint32_to_serial3(n);
+                    }
+                    // move to next state
+                    current = WaitForAck;
                 } else {
-                    // if the byte was something other than 'A' or 'C', reset to Listen
+                    // this will only happen if it couldn't read 8 bytes or took too long
+                    // go back to listening state and start again waiting for C
                     current = Listen;
                 }
-            } else {
-                // if it couldn't read a byte or if it took too long
-                current = Listen;
-            }   
+            }
+            while (current == WaitForAck) {
+                // wait for 'A' from client on Serial3
+                Serial.println("Waiting for Ack");
+                if (wait_on_serial3(1, 1000)) {
+                    // if it could read a character within 1s
+                    char readA = Serial3.read();
+                    if (readA == 'A') {
+                        // if character was 'A', move to data exchange
+                        Serial.println("Received- Data Exchange Ready");
+                        current = DataExchange;
+                    } else if (readA == 'C') {
+                        // if receives 'C' instead of 'A', read client keys but do not send server keys
+                        // if character was 'C', move back to waiting for key state
+                        // firstTime is reset to false so Server will not send its keys again
+                        firstTime = false;
+                        current = WaitForKey;
+                    } else {
+                        // if the byte was something other than 'A' or 'C', reset to Listen
+                        current = Listen;
+                    }
+                } else {
+                    // if it couldn't read a byte or if it took too long
+                    current = Listen;
+                }   
+            }
         }
     }
 
@@ -546,7 +548,6 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         arr[0] = e;
         arr[1] = m;
     }
-    return 0;
 }
 
 
