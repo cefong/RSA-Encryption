@@ -229,9 +229,16 @@ int32_t reduce_mod(int32_t x, uint32_t m) {
     }
 }
 
+// declare variables for server/client keys and moduli
+uint32_t serverPublicKey;
+uint32_t serverPrivateKey;
+uint32_t serverModulus;
+uint32_t clientPublicKey;
+uint32_t clientPrivateKey;
+uint32_t clientModulus;
 
 /*
-    Determines the modular equivalent of an integer with a given modulus
+    Updates keys and modulus.
 
     Arguments:
         serverPublicKey (uint32_t&): Pass-by reference to server's public key
@@ -433,7 +440,7 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         // e, m are client keys
         current = Listen;
         while (current != DataExchange) {
-            // if we have reached Data Exchane stage, stop handshake
+            // if we have reached Data Exchange stage, stop handshake
             while (current == Listen) {
                 // wait to receive connection request 'C' on Serial3
                 // reset firstTime variable so that the Server will send its keys
@@ -599,13 +606,6 @@ void setup() {
 */
 int main() {
     setup();
-    // declare variables for server/client keys and moduli
-    uint32_t serverPublicKey;
-    uint32_t serverPrivateKey;
-    uint32_t serverModulus;
-    uint32_t clientPublicKey;
-    uint32_t clientPrivateKey;
-    uint32_t clientModulus;
     uint32_t d, n, e, m;
     uint32_t keyArray[2];
     uint32_t Key, Mod;
@@ -638,7 +638,7 @@ int main() {
     m = keyArray[1];
     // Now enter the communication phase.
     communication(d, n, e, m);
-
+    Serial.flush();
     // Should never get this far (communication has an infite loop).
     return 0;
 }
