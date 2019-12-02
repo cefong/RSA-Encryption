@@ -229,14 +229,6 @@ int32_t reduce_mod(int32_t x, uint32_t m) {
     }
 }
 
-// declare global variables for server/client keys and moduli
-uint32_t serverPublicKey;
-uint32_t serverPrivateKey;
-uint32_t serverModulus;
-
-uint32_t clientPublicKey;
-uint32_t clientPrivateKey;
-uint32_t clientModulus;
 
 /*
     Determines the modular equivalent of an integer with a given modulus
@@ -607,7 +599,13 @@ void setup() {
 */
 int main() {
     setup();
-    Serial.println("hate you");
+    // declare variables for server/client keys and moduli
+    uint32_t serverPublicKey;
+    uint32_t serverPrivateKey;
+    uint32_t serverModulus;
+    uint32_t clientPublicKey;
+    uint32_t clientPrivateKey;
+    uint32_t clientModulus;
     uint32_t d, n, e, m;
     uint32_t keyArray[2];
     uint32_t Key, Mod;
