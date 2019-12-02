@@ -5,7 +5,6 @@
     Tweaks by Zac Friggstad
 */
 #include <Arduino.h>
-#include <utility>
 using namespace std;
 
 // Constants from the assn. spec
@@ -23,7 +22,7 @@ const int serverPin = 13;
 
 enum StateNames {
     WaitForAck, DataExchange, Listen, WaitForKey
-}
+};
 
 /*
     Returns true if arduino is server, false if arduino is client
@@ -104,7 +103,7 @@ bool wait_on_serial3(uint8_t nbytes, long timeout) {
     while (Serial3.available() < nbytes && (timeout < 0 || millis() < deadline)) {
         delay(1);
     }
-    return Serial3.available >= nbytes;
+    return (Serial3.available() >= nbytes);
 }
 
 
@@ -165,9 +164,11 @@ char decrypt(uint32_t x, uint32_t d, uint32_t n) {
 }
 
 
-pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
+void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
     // d, n are the keys to be sent
     uint32_t e, m;
+    bool firstTime;
+    StateNames current;
     // e, m are the keys to be received
     // WaitForAck, DataExchange, Listen, WaitForKey
     
@@ -175,12 +176,12 @@ pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
         // if server
         // d, n are server keys
         // e, m are client keys
-        StateNames current = Listen
+        current = Listen;
         // if we have reached Data Exchane stage, stop handshake
-        while (current = Listen) {
+        while (current == Listen) {
             // wait to receive connection request 'C' on Serial3
             // reset firstTime variable so that the Server will send its keys
-            bool firstTime = true;
+            firstTime = true;
             if (wait_on_serial3(1, 1000)) {
                 // keeps waiting to read 'C'
                 char readC = Serial3.read();
@@ -191,7 +192,7 @@ pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
                 }
             }
         }
-        if (current = WaitForKey) {
+        if (current == WaitForKey) {
             // once C received, read client public key (exp and mod)
             // wait for 1s to read the 8 bytes of the keys
             if (wait_on_serial3(8, 1000)) {
@@ -216,7 +217,7 @@ pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
                 current = Listen;
             }
         }
-        if (current = WaitForAck) {
+        if (current == WaitForAck) {
             // wait for 'A' from client on Serial3
             if (wait_on_serial3(1, 1000)) {
                 // if it could read a character within 1s
@@ -241,7 +242,7 @@ pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
         }
     }
 
-    if (!= isServer()) {
+    if (!isServer()) {
         // if client
         // d, n are client keys
         // e, m are server keys
@@ -249,7 +250,7 @@ pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
         while (current == WaitForAck) {
             // if you haven't already received 'A'
             // keep sending 'C' and client keys
-            uint32_to_serial3('C');
+            uint32_to_serial3("C");
             uint32_to_serial3(d);
             uint32_to_serial3(n);
             // if no 'A' is read from server, loop will repeat and send 'C' and keys again
@@ -270,8 +271,10 @@ pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
         }
     }
     if (current == DataExchange) {
-        return make_pair(e, m)
+        arr[0] = e;
+        arr[1] = m;
     }
+    return 0;
 }
 
 
@@ -332,7 +335,7 @@ void setup() {
 int main() {
     setup();
     uint32_t d, n, e, m;
-
+    uint32_t keyArray[2];
     // Generate keys
 
     // Determine our role and the encryption keys.
@@ -353,7 +356,7 @@ int main() {
     // Perform handshaking procedure
     // since handshake returns a pair type with the first number being e and the second being m
     // need to unpack PublicKeys in order to store e and m
-    tie(e,m) = handshake(d,n)
+    handshake(d,n, keyArray);
     // Now enter the communication phase.
     communication(d, n, e, m);
 
