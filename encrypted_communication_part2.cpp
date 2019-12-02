@@ -123,16 +123,16 @@ int32_t reduce_mod(int32_t x, uint32_t m) {
 
 // Constants from the assn. spec
 // Primes: 307, 311
-const uint32_t serverPublicKey;
-const uint32_t serverPrivateKey;
-const uint32_t serverModulus;
+uint32_t serverPublicKey;
+uint32_t serverPrivateKey;
+uint32_t serverModulus;
 
 // Generator: 271, 313
-const uint32_t clientPublicKey;
-const uint32_t clientPrivateKey;
-const uint32_t clientModulus;
+uint32_t clientPublicKey;
+uint32_t clientPrivateKey;
+uint32_t clientModulus;
 
-int32_t clientKeyGeneration(uint32_t& serverPublicKey, uint32_t& serverPrivateKey, uint32_t& serverModulus) {
+void serverKeyGeneration(uint32_t& serverPublicKey, uint32_t& serverPrivateKey, uint32_t& serverModulus) {
     unsigned int smallprime = primerange(14);
     unsigned int biggerprime = primerange(15);
     uint32_t toti = totient(smallprime,biggerprime);
@@ -140,9 +140,10 @@ int32_t clientKeyGeneration(uint32_t& serverPublicKey, uint32_t& serverPrivateKe
     serverModulus = modulus(smallprime, biggerprime);
     int32_t euci = ext_euclid(serverPublicKey, toti);
     serverPrivateKey = reduce_mod(euci, serverModulus);
+    Serial.println("generated keys for server");
 }
 
-int32_t serverKeyGeneration(uint32_t& clientPublicKey, uint32_t& clientPrivateKey, uint32_t& clientModulus) {
+int32_t clientKeyGeneration(uint32_t& clientPublicKey, uint32_t& clientPrivateKey, uint32_t& clientModulus) {
     unsigned int smallprime = primerange(14);
     unsigned int biggerprime = primerange(15);
     uint32_t toti = totient(smallprime,biggerprime);
@@ -150,6 +151,7 @@ int32_t serverKeyGeneration(uint32_t& clientPublicKey, uint32_t& clientPrivateKe
     clientModulus = modulus(smallprime, biggerprime);
     int32_t euci = ext_euclid(clientPublicKey, toti);
     clientPrivateKey = reduce_mod(euci, clientModulus);
+    Serial.println("generated keys for client");
 }
 
 const int serverPin = 13;
@@ -483,6 +485,8 @@ int main() {
     // Determine our role and the encryption keys.
     if (isServer()) {
         Serial.println("Server");
+        // generate keys for server
+        serverKeyGeneration(serverPublicKey, serverPrivateKey, serverModulus);
         d = serverPrivateKey;
         n = serverModulus;
         // e = clientPublicKey;
@@ -494,6 +498,8 @@ int main() {
         m = keyArray[1];
     } else {
         Serial.println("Client");
+        // generate keys for client
+        clientKeyGeneration(clientPublicKey, clientPrivateKey, clientModulus);
         d = clientPrivateKey;
         n = clientModulus;
         // e = serverPublicKey;
