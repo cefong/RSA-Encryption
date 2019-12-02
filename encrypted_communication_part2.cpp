@@ -132,24 +132,24 @@ const uint32_t clientPublicKey;
 const uint32_t clientPrivateKey;
 const uint32_t clientModulus;
 
-int32_t clientKeyGeneration(uint32_t& serverPublicKey, int32_t& serverPrivateKey, uint32_t& serverModulus) {
+int32_t clientKeyGeneration(uint32_t& serverPublicKey, uint32_t& serverPrivateKey, uint32_t& serverModulus) {
     unsigned int smallprime = primerange(14);
     unsigned int biggerprime = primerange(15);
     uint32_t toti = totient(smallprime,biggerprime);
-    uint32_t serverPublicKey = publickey(toti);
-    uint32_t serverModulus = modulus(smallprime, biggerprime);
-    int32_t euci = ext_euclid(e, toti);
-    int32_t serverPrivateKey = reduce_mod(euci, mod);
+    serverPublicKey = publickey(toti);
+    serverModulus = modulus(smallprime, biggerprime);
+    int32_t euci = ext_euclid(serverPublicKey, toti);
+    serverPrivateKey = reduce_mod(euci, serverModulus);
 }
 
-int32_t serverKeyGeneration(uint32_t& clientPublicKey, int32_t& clientPrivateKey, uint32_t& clientModulus) {
+int32_t serverKeyGeneration(uint32_t& clientPublicKey, uint32_t& clientPrivateKey, uint32_t& clientModulus) {
     unsigned int smallprime = primerange(14);
     unsigned int biggerprime = primerange(15);
     uint32_t toti = totient(smallprime,biggerprime);
-    uint32_t clientPublicKey = publickey(toti);
-    uint32_t clientModulus = modulus(smallprime, biggerprime);
-    int32_t euci = ext_euclid(e, toti);
-    int32_t clientPrivateKey = reduce_mod(euci, mod);
+    clientPublicKey = publickey(toti);
+    clientModulus = modulus(smallprime, biggerprime);
+    int32_t euci = ext_euclid(clientPublicKey, toti);
+    clientPrivateKey = reduce_mod(euci, clientModulus);
 }
 
 const int serverPin = 13;
