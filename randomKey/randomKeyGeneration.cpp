@@ -130,10 +130,8 @@ int main() {
 		int32_t euci = ext_euclid(e, toti);
 		int32_t rightmod = reduce_mod(euci, mod);
 		Serial.println(e);
-		Serial.println(toti);
-		Serial.println(euci);
-		Serial.println(mod);
 		Serial.println(rightmod);
+		Serial.println(mod);
 		Serial.println();
 		delay(1000);
 	}
