@@ -456,7 +456,7 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
                 }
             }
         }
-        if (current == WaitForKey) {
+        while (current == WaitForKey) {
             // once C received, read client public key (exp and mod)
             // wait for 1s to read the 8 bytes of the keys
             Serial.println("Waiting for Key");
@@ -484,7 +484,7 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
                 current = Listen;
             }
         }
-        if (current == WaitForAck) {
+        while (current == WaitForAck) {
             // wait for 'A' from client on Serial3
             Serial.println("Waiting for Ack");
             if (wait_on_serial3(1, 1000)) {
@@ -606,6 +606,7 @@ void setup() {
 */
 int main() {
     setup();
+    Serial.println("hate you");
     uint32_t d, n, e, m;
     uint32_t keyArray[2];
     uint32_t Key, Mod;
