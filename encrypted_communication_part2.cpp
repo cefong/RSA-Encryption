@@ -181,11 +181,12 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         while (current == Listen) {
             // wait to receive connection request 'C' on Serial3
             // reset firstTime variable so that the Server will send its keys
+            Serial.println("Listening");
             firstTime = true;
             if (wait_on_serial3(1, 1000)) {
                 // keeps waiting to read 'C'
                 char readC = Serial3.read();
-                if (readC == "C") {
+                if (readC == 'C') {
                     // if the character read was 'C', continue to next state
                     // otherwise, will keep listening
                     current = WaitForKey;
@@ -195,17 +196,20 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         if (current == WaitForKey) {
             // once C received, read client public key (exp and mod)
             // wait for 1s to read the 8 bytes of the keys
+            Serial.println("Waiting for Key");
             if (wait_on_serial3(8, 1000)) {
                 // if it could read 8 bytes within 1s
                 // first read e, 4 bytes
                 e = uint32_from_serial3();
                 // next read m, 4 bytes
                 m = uint32_from_serial3();
+                Serial.println("Received keys");
                 if (firstTime) {
                     // if this is the first time you've hit WaitForKey state
                     // prevents the arduino from sending its keys twice
                     // send 'A', then send server public keys
-                    uint32_to_serial3('A');
+                    Serial.println("Sending keys");
+                    Serial3.write('A');
                     uint32_to_serial3(d);
                     uint32_to_serial3(n);
                 }
@@ -219,11 +223,13 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         }
         if (current == WaitForAck) {
             // wait for 'A' from client on Serial3
+            Serial.println("Waiting for Ack");
             if (wait_on_serial3(1, 1000)) {
                 // if it could read a character within 1s
                 char readA = Serial3.read();
                 if (readA == 'A') {
                     // if character was 'A', move to data exchange
+                    Serial.println("Received- Data Exchange Ready");
                     current = DataExchange;
                 } else if (readA == 'C') {
                     // if receives 'C' instead of 'A', read client keys but do not send server keys
@@ -248,22 +254,24 @@ void handshake(uint32_t d, uint32_t n, uint32_t arr[]) {
         // e, m are server keys
         StateNames current = WaitForAck;
         while (current == WaitForAck) {
+            Serial.println("Waiting for Ack");
             // if you haven't already received 'A'
             // keep sending 'C' and client keys
-            uint32_to_serial3("C");
+            Serial3.write('C');
             uint32_to_serial3(d);
             uint32_to_serial3(n);
             // if no 'A' is read from server, loop will repeat and send 'C' and keys again
             if (wait_on_serial3(1, 1000)) {
                 // if character available within 1s
                 char readA = Serial3.read();
-                if (readA == "A" && wait_on_serial3(8, 1000)) {
+                if (readA == 'A' && wait_on_serial3(8, 1000)) {
                     // if character read was A and client could read 8 bytes in time
                     // read server keys
+                    Serial.println("Received- reading keys");
                     e = uint32_from_serial3();
                     m = uint32_from_serial3();
                     // send 'A' back
-                    uint32_to_serial3("A");
+                    Serial3.write('A');
                     // state is now Data Exchange
                     current = DataExchange;
                 }
