@@ -119,6 +119,12 @@ int32_t reduce_mod(int32_t x, uint32_t m) {
 	}
 }
 
+int32_t privateKey(uint32_t modulus, uint32_t e, uint32_t totient) {
+	int32_t euclid = ext_euclid(e, totient);
+	int32_t fixedMod = reduce_mod(euclid,modulus);
+	return fixedMod;
+}
+
 int main() {
 	setup();
 	while(true) {
@@ -130,7 +136,9 @@ int main() {
 		int32_t euci = ext_euclid(e, toti);
 		int32_t rightmod = reduce_mod(euci, mod);
 		Serial.println(e);
+		Serial.println(euci);
 		Serial.println(rightmod);
+		Serial.println(privateKey(mod, e, toti));
 		Serial.println(mod);
 		Serial.println();
 		delay(1000);
