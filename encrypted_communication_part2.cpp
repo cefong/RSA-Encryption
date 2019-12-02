@@ -5,6 +5,8 @@
     Tweaks by Zac Friggstad
 */
 #include <Arduino.h>
+#include <utility>
+using namespace std;
 
 // Constants from the assn. spec
 // Primes: 307, 311
@@ -21,11 +23,6 @@ const int serverPin = 13;
 
 enum StateNames {
     WaitForAck, DataExchange, Listen, WaitForKey
-}
-
-struct PublicKeys {
-    uint32_t value1;
-    uint32_t value2;
 }
 
 /*
@@ -168,7 +165,7 @@ char decrypt(uint32_t x, uint32_t d, uint32_t n) {
 }
 
 
-PublicKeys handshake(uint32_t d, uint32_t n) {
+pair <uint32_t, uint32_t> handshake(uint32_t d, uint32_t n) {
     // d, n are the keys to be sent
     uint32_t e, m;
     // e, m are the keys to be received
@@ -273,8 +270,7 @@ PublicKeys handshake(uint32_t d, uint32_t n) {
         }
     }
     if (current == DataExchange) {
-        PublicKeys result = {e, m};
-        return result;
+        return make_pair(e, m)
     }
 }
 
@@ -355,7 +351,9 @@ int main() {
     }
 
     // Perform handshaking procedure
-    PublicKeys em = handshake(d, n);
+    // since handshake returns a pair type with the first number being e and the second being m
+    // need to unpack PublicKeys in order to store e and m
+    tie(e,m) = handshake(d,n)
     // Now enter the communication phase.
     communication(d, n, e, m);
 
