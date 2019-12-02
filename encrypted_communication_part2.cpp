@@ -23,6 +23,11 @@ enum StateNames {
     WaitForAck, DataExchange, Listen, WaitForKey
 }
 
+struct PublicKeys {
+    uint32_t value1;
+    uint32_t value2;
+}
+
 /*
     Returns true if arduino is server, false if arduino is client
 */
@@ -68,7 +73,7 @@ uint32_t multMod(uint32_t a, uint32_t b, uint32_t m) {
     function powModFast provided in the lectures.
 
     Compute and return (a to the power of b) mod m.
-	  Example: powMod(2, 5, 13) should return 6.
+      Example: powMod(2, 5, 13) should return 6.
 */
 uint32_t powMod(uint32_t a, uint32_t b, uint32_t m) {
     uint32_t result = 1 % m;
@@ -163,7 +168,7 @@ char decrypt(uint32_t x, uint32_t d, uint32_t n) {
 }
 
 
-uint32_t handshake(uint32_t d, uint32_t n) {
+PublicKeys handshake(uint32_t d, uint32_t n) {
     // d, n are the keys to be sent
     uint32_t e, m;
     // e, m are the keys to be received
@@ -268,7 +273,8 @@ uint32_t handshake(uint32_t d, uint32_t n) {
         }
     }
     if (current == DataExchange) {
-        return e, m;
+        PublicKeys result = {e, m};
+        return result;
     }
 }
 
@@ -349,7 +355,7 @@ int main() {
     }
 
     // Perform handshaking procedure
-    e, m = handshake(d, n);
+    PublicKeys em = handshake(d, n);
     // Now enter the communication phase.
     communication(d, n, e, m);
 
