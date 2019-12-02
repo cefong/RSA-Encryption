@@ -479,29 +479,31 @@ int main() {
     setup();
     uint32_t d, n, e, m;
     uint32_t keyArray[2];
-    // Generate keys
 
     // Determine our role and the encryption keys.
     if (isServer()) {
         Serial.println("Server");
         d = serverPrivateKey;
         n = serverModulus;
-        e = clientPublicKey;
-        m = clientModulus;
+        // e = clientPublicKey;
+        // m = clientModulus;
+        sKey = serverPublicKey;
+        sMod = serverPublicMod;
+        handshake(sKey, sMod, keyArray);
+        e = keyArray[0];
+        m = keyArray[1];
     } else {
         Serial.println("Client");
         d = clientPrivateKey;
         n = clientModulus;
-        e = serverPublicKey;
-        m = serverModulus;
+        // e = serverPublicKey;
+        // m = serverModulus;
+        cKey = clientPublicKey;
+        cMod = clientPublicMod;
+        handshake(cKey, cMod, keyArray);
+        e = keyArray[0];
+        m = keyArray[1];
     }
-
-    // Perform handshaking procedure
-    // since handshake returns a pair type with the first number being e and the second being m
-    // need to unpack PublicKeys in order to store e and m
-    handshake(d,n, keyArray);
-    e = keyArray[0];
-    m = keyArray[1];
     // Now enter the communication phase.
     communication(d, n, e, m);
 
